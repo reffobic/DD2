@@ -4,13 +4,12 @@ from cocotb.clock import Clock
 from cocotb.queue import Queue
 
 def _safe_int(val):
-    """Convert signal to int; use 0 if X/Z (e.g. at startup)."""
     try:
         return int(val)
     except (ValueError, TypeError):
         return 0
 
-# --- Reference model: mirrors counter.v (rst, load, load_value, en) [§6.3 / §6.5] ---
+
 class CounterModel:
     def __init__(self, width: int):
         self.width = width
@@ -20,15 +19,14 @@ class CounterModel:
     def step(self, rst: int, load: int, load_val: int, en: int) -> int:
         current = self.count
         if rst:
-            self.count = 0  # [cite: 345]
+            self.count = 0
         elif load:
-            self.count = load_val  # [cite: 346]
+            self.count = load_val
         elif en:
-            self.count = (self.count + 1) & self.mask  # [cite: 347, 242]
+            self.count = (self.count + 1) & self.mask
         return current
 
 
-# --- Driver: drives DUT inputs aligned to clock [§6.3 / §6.5] ---
 class CounterDriver:
     def __init__(self, dut):
         self.dut = dut
@@ -60,7 +58,6 @@ class CounterDriver:
         await NextTimeStep()
 
 
-# --- Monitor: observes DUT and pushes samples into queue [§6.3 / §6.5] ---
 class CounterMonitor:
     def __init__(self, dut, out_queue: Queue):
         self.dut = dut
@@ -70,7 +67,6 @@ class CounterMonitor:
     async def run(self):
         while True:
             await RisingEdge(self.dut.clk)
-            # Capture inputs at edge (before test can change them for next cycle)
             rst = _safe_int(self.dut.rst.value)
             load = _safe_int(self.dut.load.value)
             load_value = _safe_int(self.dut.load_value.value)
@@ -83,12 +79,11 @@ class CounterMonitor:
                 "load": load,
                 "load_value": load_value,
                 "en": en,
-                "count": _safe_int(self.dut.count.value),  # count after this edge
+                "count": _safe_int(self.dut.count.value),
             }
             await self.q.put(sample)
 
 
-# --- Scoreboard: compares monitor output with reference model [§6.3 / §6.5] ---
 class Scoreboard:
     def __init__(self, model: CounterModel, in_queue: Queue):
         self.model = model
@@ -100,7 +95,7 @@ class Scoreboard:
             self.model.step(
                 rst=s["rst"], load=s["load"], load_val=s["load_value"], en=s["en"]
             )
-            expected = self.model.count  # new count after this edge
+            expected = self.model.count
             got = s["count"]
             assert got == expected, (
                 f"Mismatch at cycle {s['cycle']}: "
@@ -110,7 +105,6 @@ class Scoreboard:
 
 @cocotb.test()
 async def counter_demo_components(dut):
-    """§6.5 Demo: clock + reset + driver + monitor + model + scoreboard (with load)."""
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     q = Queue()
     driver = CounterDriver(dut)
@@ -120,7 +114,7 @@ async def counter_demo_components(dut):
     total = 0
 
     cocotb.start_soon(monitor.run())
-    await driver.reset(cycles=2)  # 2 edges rst=1 + 1 edge rst=0 = 3 samples
+    await driver.reset(cycles=2)
     total += 3
     await driver.set_enable(en=0, cycles=5)
     total += 5
@@ -143,8 +137,6 @@ async def counter_demo_components(dut):
 
 @cocotb.test()
 async def test_counter_load(dut):
-    """Test load functionality: load 42, then assert count is 42."""
-    # Clock and reset setup
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     dut.rst.value = 1
     dut.load.value = 0
@@ -162,14 +154,12 @@ async def test_counter_load(dut):
     await RisingEdge(dut.clk)
     dut.load.value = 0
 
-    # After one clock, the count should be 42
-    await ReadOnly()  # Wait for signals to settle [cite: 273]
+    await ReadOnly()
     assert int(dut.count.value) == 42, f"Expected 42, got {int(dut.count.value)}"
 
 
 @cocotb.test()
 async def test_counter_scoreboard(dut):
-    """Drive rst/load/en and compare DUT count to reference model (scoreboard)."""
     model = CounterModel(width=8)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     dut.rst.value = 1
@@ -184,8 +174,7 @@ async def test_counter_scoreboard(dut):
     await ReadOnly()
     assert int(dut.count.value) == 0, f"After reset expected 0, got {int(dut.count.value)}"
 
-    await NextTimeStep()  # leave ReadOnly so we can drive inputs
-    # Cycle 1: enable count -> 1
+    await NextTimeStep()
     dut.en.value = 1
     model.step(0, 0, 0, 1)
     await RisingEdge(dut.clk)
@@ -193,7 +182,6 @@ async def test_counter_scoreboard(dut):
     assert int(dut.count.value) == model.count, f"Expected {model.count}, got {int(dut.count.value)}"
 
     await NextTimeStep()
-    # Cycle 2: load 100
     dut.en.value = 0
     dut.load.value = 1
     dut.load_value.value = 100
@@ -204,7 +192,6 @@ async def test_counter_scoreboard(dut):
     assert int(dut.count.value) == model.count, f"After load expected {model.count}, got {int(dut.count.value)}"
 
     await NextTimeStep()
-    # Cycle 3–4: count 101, 102
     dut.en.value = 1
     for _ in range(2):
         model.step(0, 0, 0, 1)

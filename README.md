@@ -64,12 +64,19 @@ iverilog -o counter.vvp -Wall -c counter.f && vvp counter.vvp
 
 Open `.vcd` or `sim_build/*.fst` in a viewer (e.g. GTKWave or Surf).
 
-## Pushing to GitHub
+## Create a new repo on GitHub
 
-This repo is already a git repository with an initial commit. To put it on GitHub:
+**Are you signed in to GitHub?**  
+Open [github.com](https://github.com) in your browser. If you see your profile picture and your username in the top-right, you’re signed in. If not, sign in (or create an account), then come back here.
 
-1. Create a new repository on [GitHub](https://github.com/new) (do **not** add a README or .gitignore; the project already has them).
-2. Add the remote and push:
+**Create the repo and push this project:**
+
+1. Go to [github.com/new](https://github.com/new).
+2. Pick a **Repository name** (e.g. `rtl-verification` or `DD2`).
+3. Choose **Public**.
+4. Leave **“Add a README”** and **“Add .gitignore”** unchecked (this project already has them).
+5. Click **Create repository**.
+6. In your project folder, run (use your username and repo name):
 
    ```bash
    git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
@@ -77,4 +84,12 @@ This repo is already a git repository with an initial commit. To put it on GitHu
    git push -u origin main
    ```
 
-   Or with SSH: `git@github.com:YOUR_USERNAME/YOUR_REPO_NAME.git`
+   If you use SSH:
+
+   ```bash
+   git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPO_NAME.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+   When you push, the browser may ask you to sign in or use a personal access token; follow the prompts.

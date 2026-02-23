@@ -1,4 +1,3 @@
-// Counter testbench: VCD for Surf — shows load going high and count jumping to load_value (42) on next clock
 module counter_tb;
     reg clk = 0;
     reg rst, load, en;
@@ -9,7 +8,7 @@ module counter_tb;
         .clk(clk), .rst(rst), .load(load), .load_value(load_value), .en(en), .count(count)
     );
 
-    always #5 clk = ~clk;  // 10 ns period
+    always #5 clk = ~clk;
 
     initial begin
         $dumpfile("counter.vcd");
@@ -20,12 +19,11 @@ module counter_tb;
         rst = 0;
         #10;
 
-        // Load scenario: drive load high with load_value = 42
         load = 1;
         load_value = 8'd42;
-        #10;                    // one clock — count becomes 42 on this posedge
+        #10;
         load = 0;
-        #30;                    // hold to see count stay at 42
+        #30;
 
         $finish;
     end
