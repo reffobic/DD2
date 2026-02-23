@@ -1,0 +1,8 @@
+# Run counter tests: make -f Makefile.counter
+TOPLEVEL_LANG = verilog
+SIM = icarus
+VERILOG_SOURCES = $(PWD)/rtl/counter.v
+TOPLEVEL = counter
+MODULE = test_counter
+export WAVES = 1
+include $(shell cocotb-config --makefiles)/Makefile.sim
