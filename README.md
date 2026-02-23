@@ -63,3 +63,18 @@ iverilog -o counter.vvp -Wall -c counter.f && vvp counter.vvp
 ## Waveforms
 
 Open `.vcd` or `sim_build/*.fst` in a viewer (e.g. GTKWave or Surf).
+
+## Pushing to GitHub
+
+This repo is already a git repository with an initial commit. To put it on GitHub:
+
+1. Create a new repository on [GitHub](https://github.com/new) (do **not** add a README or .gitignore; the project already has them).
+2. Add the remote and push:
+
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+   Or with SSH: `git@github.com:YOUR_USERNAME/YOUR_REPO_NAME.git`
